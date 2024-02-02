@@ -1,7 +1,7 @@
 '''
 This code was inspired by Nipun Batra sir's class notebooks.
 '''
-
+from tqdm import tqdm
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -53,30 +53,58 @@ hyperparameters['max_depth'] = [1,2,3,4,5,6,7,8,9,10]
 hyperparameters['min_samples_split'] = [2,3,4,5,6,7,8]
 hyperparameters['criteria_values'] = ['gini', 'entropy']
 
-best_accuracy = 0
-best_hyperparameters = {}
 
-out = {}
-count = 0
-for max_depth in hyperparameters['max_depth']:
+
+
+# Additional hyperparameters to tune
+hyperparameters['min_samples_leaf'] = [1, 2, 3, 4, 5]
+hyperparameters['max_features'] = [None, 'sqrt', 'log2']
+hyperparameters['splitter'] = ['best', 'random']
+
+# Initialize a DataFrame to store hyperparameter results
+columns = ['max_depth', 'min_samples_split', 'min_samples_leaf', 'criterion', 'max_features', 'splitter', 'val_accuracy']
+# hyperparam_results_df = pd.DataFrame(columns=columns)
+hyperparam_results_df = []
+# Update the loop to include new hyperparameters
+for max_depth in tqdm(hyperparameters['max_depth']):
     for min_samples_split in hyperparameters['min_samples_split']:
-        for criterion in hyperparameters['criteria_values']:
-            # Create and fit the decision tree classifier with the current hyperparameters
-            Recognizer = tree.DecisionTreeClassifier(max_depth=max_depth, min_samples_split=min_samples_split, criterion=criterion, random_state=42)
-            Recognizer.fit(X_train, y_train)
-            
-            # Evaluate the performance on the validation set
-            val_accuracy = Recognizer.score(X_val, y_val)
-            out[count] = {'max_depth': max_depth, 'min_samples_split': min_samples_split, 'criterion': criterion, 'val_accuracy': val_accuracy}
-            count += 1
+        for min_samples_leaf in hyperparameters['min_samples_leaf']:
+            for criterion in hyperparameters['criteria_values']:
+                for max_features in hyperparameters['max_features']:
+                    for splitter in hyperparameters['splitter']:
+                        # Create and fit the decision tree classifier with the current hyperparameters
+                        Recognizer = tree.DecisionTreeClassifier(
+                            max_depth=max_depth, 
+                            min_samples_split=min_samples_split, 
+                            min_samples_leaf=min_samples_leaf,
+                            criterion=criterion, 
+                            max_features=max_features,
+                            splitter=splitter,
+                            random_state=42
+                        )
+                        Recognizer.fit(X_train, y_train)
+                        
+                        # Evaluate the performance on the validation set
+                        val_accuracy = Recognizer.score(X_val, y_val)
+                        
+                        # Append results to the DataFrame
+                        hyperparam_results_df = hyperparam_results_df.append({
+                            'max_depth': max_depth, 
+                            'min_samples_split': min_samples_split, 
+                            'min_samples_leaf': min_samples_leaf,
+                            'criterion': criterion, 
+                            'max_features': max_features,
+                            'splitter': splitter,
+                            'val_accuracy': val_accuracy
+                        }, ignore_index=True)
 
-hparam_df = pd.DataFrame(out).T
-best_hyperparameters_row_id = 0
-for i in range(0,len(hyperparameters['max_depth'])*len(hyperparameters['min_samples_split'])*len(hyperparameters['criteria_values'])):
-    if (hparam_df['val_accuracy'][i] > hparam_df['val_accuracy'][best_hyperparameters_row_id]):
-        best_hyperparameters_row_id = i
+# Find the best hyperparameters based on validation accuracy
+best_hyperparameters_row_id = hyperparam_results_df['val_accuracy'].idxmax()
+best_hyperparameters = hyperparam_results_df.loc[best_hyperparameters_row_id].to_dict()
 
-best_accuracy = hparam_df['val_accuracy'][best_hyperparameters_row_id]
-best_hyperparameters = {'max_depth':hparam_df['max_depth'][best_hyperparameters_row_id], 'min_samples_split':hparam_df['min_samples_split'][best_hyperparameters_row_id], 'criterion':hparam_df['criterion'][best_hyperparameters_row_id] }
 print("Best Hyperparameters:", best_hyperparameters)
-print("Validation Set accuracy: {:.4f}".format(best_accuracy))
+print("Validation Set accuracy: {:.4f}".format(best_hyperparameters['val_accuracy']))
+
+# Display the DataFrame for comparison
+print("\nHyperparameter Comparison:")
+print(hyperparam_results_df)
