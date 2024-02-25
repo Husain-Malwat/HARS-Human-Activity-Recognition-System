@@ -2,7 +2,7 @@
 
 ## Overview
 
-This project focuses on implementing a Human Activity Recognition system using accelerometer and gyroscope data. The dataset used is the UCI-HAR dataset, where participants performed six activities while wearing a Samsung Galaxy S II smartphone. The goal is to analyze and classify activities based on sensor data.
+Implementation of a Human Activity Recognition system using accelerometer and gyroscope data. The dataset used is the UCI-HAR dataset, where participants performed six activities. The goal is to analyze and classify activities based on sensor data.
 
 ## Dataset
 
@@ -62,7 +62,6 @@ This project focuses on implementing a Human Activity Recognition system using a
 ## Results
 
 ### Confusion Matrix
-
 
 ### Scatter Plots
 
